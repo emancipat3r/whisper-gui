@@ -1,0 +1,36 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.out
+
+# Build and cache
+bin/
+build/
+dist/
+*.o
+*.a
+*.test
+
+# Temp files
+*.log
+*.tmp
+*.swp
+*.swo
+*.DS_Store
+
+# IDE/editor config
+.vscode/
+.idea/
+*.code-workspace
+
+# Whisper model files (they're huge, don't commit)
+models/
+
+# Runtime audio files
+temp/
+
+# Dependency directories (if any vendored)
+vendor/
