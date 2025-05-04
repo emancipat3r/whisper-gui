@@ -7,7 +7,12 @@ import (
 	"strings"
 )
 
-func Transcribe(audioPath string) (string, error) {
+func Transcribe(audioPath string, useGPU bool) (string, error) {
+	args := []string{"transcribe", audioPath}
+	if useGPU {
+		args = append(args, "--device", "cuda")
+	}
+
 	cmd := exec.Command("python3", "/opt/whisper-gui/whisper/transcribe.py", audioPath)
 
 	var out bytes.Buffer

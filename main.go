@@ -1,7 +1,18 @@
 package main
 
-import "whispergui/ui"
+import (
+	"os"
+	"whispergui/ui"
+)
 
 func main() {
-	ui.Run()
+	useGPU := false
+
+	for _, arg := range os.Args[1:] {
+		if arg == "--gpu" {
+			useGPU = true
+		}
+	}
+
+	ui.Run(useGPU)
 }

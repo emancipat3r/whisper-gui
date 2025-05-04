@@ -5,6 +5,7 @@
 *.so
 *.dylib
 *.out
+whisper-gui
 
 # Build and cache
 bin/

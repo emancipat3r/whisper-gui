@@ -18,7 +18,7 @@ import (
 
 var isRecording bool
 
-func Run() {
+func Run(useGPU bool) {
 	fmt.Println("Launching Whisper GUI...")
 
 	a := app.New()
@@ -55,7 +55,7 @@ func Run() {
 
 				stopFunc()
 
-				transcript, err := whisper.Transcribe(audioPath)
+				transcript, err := whisper.Transcribe(audioPath, useGPU)
 				if err != nil {
 					bindStr.Set("Transcription error: " + err.Error())
 					startStop.SetText("Start Recording")
