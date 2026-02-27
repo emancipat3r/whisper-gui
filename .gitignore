@@ -35,3 +35,4 @@ temp/
 
 # Dependency directories (if any vendored)
 vendor/
+.venv

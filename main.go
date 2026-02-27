@@ -1,18 +1,18 @@
 package main
 
 import (
-	"os"
+	"whispergui/gpu"
 	"whispergui/ui"
+	"whispergui/whisper"
 )
 
 func main() {
-	useGPU := false
+	// Detect if GPU/CUDA is available
+	gpuAvailable, gpuName, vramGB := gpu.DetectCUDA()
+	ramGB := gpu.GetSystemRAMGB()
 
-	for _, arg := range os.Args[1:] {
-		if arg == "--gpu" {
-			useGPU = true
-		}
-	}
+	// Ensure whisper backend closes gracefully
+	defer whisper.Close()
 
-	ui.Run(useGPU)
+	ui.Run(gpuAvailable, gpuName, vramGB, ramGB)
 }
