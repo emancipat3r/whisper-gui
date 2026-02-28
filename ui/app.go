@@ -162,27 +162,40 @@ func Run(useGPU bool, gpuName string, vramGB float64, ramGB float64) {
 	// Start initial monitoring stream
 	startAudioMonitor()
 
-	// Status bar with indicator
-	statusBar := container.NewHBox(
-		recordingIndicatorWrapper,
-		statusLabel,
-		layout.NewSpacer(),
+	// Status bar with indicator (grouped into logical segments for wrapping)
+	statusGroup := container.NewHBox(recordingIndicatorWrapper, statusLabel)
+	volumeGroup := container.NewHBox(
 		widget.NewLabel("Vol:"),
 		container.NewGridWrap(fyne.NewSize(100, 36), volumeSlider),
 		widget.NewLabel("Lvl:"),
 		container.NewCenter(vuMeter),
+	)
+	modelGroup := container.NewHBox(widget.NewLabel("Model:"), modelSelect)
+	inputGroup := container.NewHBox(widget.NewLabel("Input:"), deviceSelect)
+	gpuGroup := container.NewHBox(gpuIndicator, gpuStatusLabel)
+	readyGroup := container.NewHBox(readyIndicator, readyStatusLabel)
+
+	// Since Fyne v2 doesn't have a native responsive flow-wrap layout for toolbars that resizes its height,
+	// we arrange them in two rows so the window's minimum width is greatly reduced.
+	statusBarRow1 := container.NewHBox(
+		statusGroup,
 		layout.NewSpacer(),
-		widget.NewLabel("Model:"),
-		modelSelect,
+		volumeGroup,
+	)
+
+	statusBarRow2 := container.NewHBox(
+		readyGroup,
 		layout.NewSpacer(),
-		widget.NewLabel("Input:"),
-		deviceSelect,
+		gpuGroup,
 		layout.NewSpacer(),
-		gpuIndicator,
-		gpuStatusLabel,
+		modelGroup,
 		layout.NewSpacer(),
-		readyIndicator,
-		readyStatusLabel,
+		inputGroup,
+	)
+
+	statusBar := container.NewVBox(
+		statusBarRow1,
+		statusBarRow2,
 	)
 
 	bindStr := binding.NewString()
@@ -453,7 +466,11 @@ func Run(useGPU bool, gpuName string, vramGB float64, ramGB float64) {
 		}
 	}
 
-	go loadModel(selectedModel, useGPU)
+	// Delay the initial load slightly so Fyne has time to start its event loop
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		loadModel(selectedModel, useGPU)
+	}()
 
 	w.ShowAndRun()
 }

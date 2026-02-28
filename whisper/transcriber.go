@@ -2,6 +2,7 @@ package whisper
 
 import (
 	"bufio"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,11 +14,15 @@ import (
 	"sync"
 )
 
+//go:embed transcribe.py
+var transcribeScript []byte
+
 type Transcriber struct {
-	cmd    *exec.Cmd
-	stdin  io.WriteCloser
-	stdout *bufio.Scanner
-	mu     sync.Mutex
+	cmd        *exec.Cmd
+	stdin      io.WriteCloser
+	stdout     *bufio.Scanner
+	scriptPath string
+	mu         sync.Mutex
 }
 
 var (
@@ -51,23 +56,67 @@ func Init(useGPU bool, modelName string) error {
 }
 
 func newTranscriber(useGPU bool, modelName string) (*Transcriber, error) {
-	// Find the script relative to the executable or current dir
-	cwd, err := os.Getwd()
+	// Write the embedded Python script to a temporary file
+	tmpFile, err := os.CreateTemp("", "whisper_transcribe_*.py")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create temp file for script: %v", err)
 	}
-	scriptPath := filepath.Join(cwd, "whisper", "transcribe.py")
+	if err := os.WriteFile(tmpFile.Name(), transcribeScript, 0644); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpFile.Name())
+		return nil, fmt.Errorf("failed to write temp script: %v", err)
+	}
+	tmpFile.Close()
+	scriptPath := tmpFile.Name()
 
 	args := []string{scriptPath, "--model", modelName}
 	if useGPU {
 		args = append(args, "--device", "cuda")
 	}
 
-	// Make sure we use the venv python if it exists
+	// Resolve the Python executable, checking for a local .venv first
 	pythonExec := "python3"
-	venvPath := filepath.Join(cwd, ".venv", "bin", "python3")
-	if _, err := os.Stat(venvPath); err == nil {
-		pythonExec = venvPath
+
+	if envPath := os.Getenv("PYTHON_ENV"); envPath != "" {
+		// 1. Check if user provided an explicit environment variable
+		envPython := filepath.Join(envPath, "bin", "python3")
+		if _, err := os.Stat(envPython); err == nil {
+			pythonExec = envPython
+		} else {
+			// Maybe they pointed directly to the executable or the bin folder
+			if stat, err := os.Stat(envPath); err == nil && !stat.IsDir() {
+				pythonExec = envPath
+			} else {
+				envPythonAlt := filepath.Join(envPath, "python3")
+				if _, err := os.Stat(envPythonAlt); err == nil {
+					pythonExec = envPythonAlt
+				}
+			}
+		}
+	} else if exePath, err := os.Executable(); err == nil {
+		// Resolve symlinks to find the real directory of the executable
+		if realExePath, err := filepath.EvalSymlinks(exePath); err == nil {
+			exePath = realExePath
+		}
+		exeDir := filepath.Dir(exePath)
+		venvExePath := filepath.Join(exeDir, ".venv", "bin", "python3")
+		if _, err := os.Stat(venvExePath); err == nil {
+			pythonExec = venvExePath
+		} else {
+			// Fallback: check original workspace if run from somewhere else
+			workspaceVenv := "/home/user/repos/whisper-gui/.venv/bin/python3"
+			if _, err := os.Stat(workspaceVenv); err == nil {
+				pythonExec = workspaceVenv
+			}
+		}
+	} else {
+		// Fallback to CWD just in case
+		if cwd, err := os.Getwd(); err == nil {
+			venvPath := filepath.Join(cwd, ".venv", "bin", "python3")
+			if _, err := os.Stat(venvPath); err == nil {
+				pythonExec = venvPath
+			}
+		}
 	}
 
 	cmd := exec.Command(pythonExec, args...)
@@ -93,9 +142,10 @@ func newTranscriber(useGPU bool, modelName string) (*Transcriber, error) {
 	}
 
 	t := &Transcriber{
-		cmd:    cmd,
-		stdin:  stdin,
-		stdout: stdout,
+		cmd:        cmd,
+		stdin:      stdin,
+		stdout:     stdout,
+		scriptPath: scriptPath,
 	}
 
 	// Wait for the READY signal
@@ -156,5 +206,8 @@ func Close() {
 	if instance != nil && instance.cmd != nil {
 		instance.stdin.Close()
 		instance.cmd.Wait() // wait for graceful exit
+		if instance.scriptPath != "" {
+			os.Remove(instance.scriptPath)
+		}
 	}
 }
