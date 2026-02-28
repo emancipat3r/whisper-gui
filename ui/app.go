@@ -317,11 +317,19 @@ func Run(useGPU bool, gpuName string, vramGB float64, ramGB float64) {
 		}
 	})
 
+	clearBtn := widget.NewButton("🗑 Clear Text", func() {
+		bindStr.Set("")
+		statusBinding.Set("✓ Text cleared")
+		recordingIndicator.FillColor = color.RGBA{R: 34, G: 139, B: 34, A: 255} // Green
+		recordingIndicator.Refresh()
+	})
+
 	// Button container with better layout
 	buttonBar := container.NewHBox(
 		layout.NewSpacer(),
 		startStop,
 		copyBtn,
+		clearBtn,
 		layout.NewSpacer(),
 	)
 
