@@ -1,8 +1,25 @@
 # whisper-gui
 
-A simple Go GUI for OpenAI's Whisper model.
+A simple Go GUI for OpenAI's Whisper model that runs **100% locally**. 
 
-## Prerequisites
+## Features & Privacy
+* **Fully Local & Private:** Unlike cloud-based transcription services, your audio data never leaves your machine. The neural networks mathematical processing happens entirely on your own CPU/GPU hardware.
+* **Offline Capable:** After downloading the model weights once, you do not need an internet connection to use the application.
+* **Responsive GUI:** Dynamically resizes to fit your workspace, packing all necessary controls into a tight profile.
+
+## System Requirements
+
+While the baseline requirements are low, OpenAI's Whisper models demand system RAM and VRAM scaling up with the model size you select.
+
+| Model Size | Parameters | English-only | Multilingual | VRAM/RAM Required | Relative Speed |
+|------------|------------|--------------|--------------|-------------------|----------------|
+| **tiny**   | 39 M       | tiny.en      | tiny         | ~1 GB             | ~32x           |
+| **base**   | 74 M       | base.en      | base         | ~1 GB             | ~16x           |
+| **small**  | 244 M      | small.en     | small        | ~2 GB             | ~6x            |
+| **medium** | 769 M      | medium.en    | medium       | ~5 GB             | ~2x            |
+| **large**  | 1550 M     | N/A          | large        | ~10 GB            | 1x             |
+
+### Dependencies
 
 1.  **Python 3.8+**
 2.  **Go 1.20+**
