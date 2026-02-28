@@ -1,5 +1,7 @@
 # whisper-gui
 
+![Whisper GUI Screenshot](assets/gui_screenshot.png)
+
 A simple Go GUI for OpenAI's Whisper model that runs **100% locally**. 
 
 ## Features & Privacy
