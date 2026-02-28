@@ -25,9 +25,10 @@ While the baseline requirements are low, OpenAI's Whisper models demand system R
 
 1.  **Python 3.8+**
 2.  **Go 1.20+**
-3.  **PortAudio** (for microphone recording)
-    *   Ubuntu/Debian: `sudo apt-get install portaudio19-dev`
-    *   macOS: `brew install portaudio`
+3.  **PortAudio** (C libraries required for microphone recording)
+    *   Ubuntu/Debian/Mint: `sudo apt-get install portaudio19-dev`
+    *   Arch Linux/Manjaro: `sudo pacman -S portaudio`
+    *   Fedora/RHEL: `sudo dnf install portaudio-devel`
 
 ## Installation
 
